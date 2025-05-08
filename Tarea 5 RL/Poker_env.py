@@ -164,8 +164,10 @@ class Poker(gym.Env):
 
         return self._get_obs(), reward_v, done, False, {}
     
-    def _draw(self, n):
-        return [self.deck.pop() for _ in range(n)]
+    def _draw(self, n=1):
+        assert len(self.deck) >= n
+        cards = [self.deck.pop() for _ in range(n)]
+        return cards if n > 1 else cards[0]
     
     def _apply_bet(self, player, action):
         if action == 0:      # fold
@@ -192,18 +194,21 @@ class Poker(gym.Env):
 
     def _advance_stage(self):
         # revela flop, turn, river o devuelve True si llega al final
-        self.stage += 1
-        if self.stage == 1:
-            # flop: revela 3 cartas
+        # flop: revela 3 cartas
+        if self.stage == 0:           
             self.community[:3] = self._draw(3)
+        # turn: revela carta 4
+        elif self.stage == 1:
+            self.community[3] = self._draw(1)
+        # river: revela carta 5 
         elif self.stage == 2:
-            # turn: revela carta 4
-            self.community[3] = self._draw(1)[0]
-        elif self.stage == 3:
-            # river: revela carta 5
-            self.community[4] = self._draw(1)[0]
-        elif self.stage >= 4:
+            self.community[4] = self._draw(1)
+
+        elif self.stage >= 3:
+
+            self.stage = 4
             return True
+        self.stage += 1
         return False
 
     def _determine_winner(self):
@@ -233,3 +238,7 @@ class Poker(gym.Env):
         print(f"Hole Opponent: {opp_syms} | str: {str_opp:.2f}")
         print(f"Community  : {comm_syms}")
         print(f"Pot: {self.pot}, Stacks: {self.stacks}\n")
+
+        revealed = [c for c in self.community if c != -1]
+        assert len(revealed) == len(set(revealed)), "carta duplicada!!!"
+
