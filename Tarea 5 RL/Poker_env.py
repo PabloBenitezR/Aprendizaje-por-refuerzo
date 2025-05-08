@@ -41,6 +41,9 @@ class Poker(gym.Env):
         self.observation_space = obs_space
         self.action_space      = action_space
 
+        self.reward_space = gym.spaces.Box(low=np.inf, high=np.inf, shape=(2,), dtype=np.float32
+                                           )
+
         self.bet_unit    = 1.0 # unidad de apuesta inicial
 
         # apuestas iniciales de cada jugador, mismas que se van intercalando
@@ -156,7 +159,10 @@ class Poker(gym.Env):
             reward = self.pot if winner == 0 else -self.bets[0]
             self.stacks[0] += reward
 
-        return self._get_obs(), reward, done, False, {}
+        round_penalty = float(self.stage)
+        reward_v = np.array([reward, round_penalty], dtype=np.float32)
+
+        return self._get_obs(), reward_v, done, False, {}
     
     def _draw(self, n):
         return [self.deck.pop() for _ in range(n)]
@@ -219,7 +225,7 @@ class Poker(gym.Env):
         opp_syms  = [self._int2card(c) for c in self.hands[1]]
         comm_syms = [self._int2card(c) if c>=0 else "__" for c in self.community]
 
-        # calcula fuerzas para mostrar
+        
         str_agent = self.eval_strength(self.hands[0], self.community)
         str_opp   = self.eval_strength(self.hands[1], self.community)
 

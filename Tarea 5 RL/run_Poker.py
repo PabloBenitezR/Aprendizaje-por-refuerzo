@@ -19,7 +19,13 @@ while not match_done:
 
    
     if done_hand:
-        print(f"\n>>> Fin de mano, Stacks: {env.stacks}\n")
+        if reward > 0:
+            print("Ganador de la mano: Agente")
+        elif reward < 0:
+            print("Ganador de la mano: Oponente")
+        else:
+            print("Empate en la mano")
+        print(f"Fin de mano →Stacks: {env.stacks}\n")
 
         
         if env.stacks[1] <= 0:
